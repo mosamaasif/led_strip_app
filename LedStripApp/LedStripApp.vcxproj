@@ -168,7 +168,7 @@
     <ClCompile Include="src\imgui\imgui_widgets.cpp" />
     <ClCompile Include="src\imgui_impl_dx12.cpp" />
     <ClCompile Include="src\imgui_impl_win32.cpp" />
-    <ClCompile Include="src\ledstrip.cpp" />
+    <ClCompile Include="src\blemaanger.cpp" />
     <ClCompile Include="src\main.cpp" />
   </ItemGroup>
   <ItemGroup>
@@ -182,7 +182,7 @@
     <ClInclude Include="src\imgui\imstb_truetype.h" />
     <ClInclude Include="src\imgui_impl_dx12.h" />
     <ClInclude Include="src\imgui_impl_win32.h" />
-    <ClInclude Include="src\ledstrip.h" />
+    <ClInclude Include="src\blemanager.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

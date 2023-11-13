@@ -1,4 +1,6 @@
 #include "window.h"
+#include "imgui_impl_win32.h"
+#include "imgui_impl_dx12.h"
 #include <tchar.h>
 
 #ifdef _DEBUG
@@ -60,16 +62,16 @@ bool Window::InitD3D()
 
 bool Window::IsOpen()
 {
-    bool done = false;
+    bool isOpen = true;
     MSG msg;
     while (PeekMessage(&msg, nullptr, 0U, 0U, PM_REMOVE))
     {
         TranslateMessage(&msg);
         DispatchMessage(&msg);
         if (msg.message == WM_QUIT)
-            done = true;
+            isOpen = false;
     }
-    return done;
+    return isOpen;
 }
 
 void Window::PreRender()
@@ -79,10 +81,10 @@ void Window::PreRender()
 
 void Window::Render()
 {
+    ImVec4 clear_color = ImVec4(0.0f, 0.0f, 0.0f, 1.0f);
+    FrameContext* frameCtx = WaitForNextFrameResources();
     UINT backBufferIdx = m_pSwapChain->GetCurrentBackBufferIndex();
     frameCtx->CommandAllocator->Reset();
-
-
 
     D3D12_RESOURCE_BARRIER barrier = {};
     barrier.Type = D3D12_RESOURCE_BARRIER_TYPE_TRANSITION;
@@ -94,16 +96,16 @@ void Window::Render()
     m_pd3dCommandList->Reset(frameCtx->CommandAllocator, nullptr);
     m_pd3dCommandList->ResourceBarrier(1, &barrier);
 
-        // Render Dear ImGui graphics
-        const float clear_color_with_alpha[4] = { clear_color.x * clear_color.w, clear_color.y * clear_color.w, clear_color.z * clear_color.w, clear_color.w };
-        m_pd3dCommandList->ClearRenderTargetView(m_mainRenderTargetDescriptor[backBufferIdx], clear_color_with_alpha, 0, nullptr);
-        m_pd3dCommandList->OMSetRenderTargets(1, &m_mainRenderTargetDescriptor[backBufferIdx], FALSE, nullptr);
-        m_pd3dCommandList->SetDescriptorHeaps(1, &m_pd3dSrvDescHeap);
-        ImGui_ImplDX12_RenderDrawData(ImGui::GetDrawData(), m_pd3dCommandList);
-        barrier.Transition.StateBefore = D3D12_RESOURCE_STATE_RENDER_TARGET;
-        barrier.Transition.StateAfter = D3D12_RESOURCE_STATE_PRESENT;
-        m_pd3dCommandList->ResourceBarrier(1, &barrier);
-        m_pd3dCommandList->Close();
+    // Render Dear ImGui graphics
+    const float clear_color_with_alpha[4] = { clear_color.x * clear_color.w, clear_color.y * clear_color.w, clear_color.z * clear_color.w, clear_color.w };
+    m_pd3dCommandList->ClearRenderTargetView(m_mainRenderTargetDescriptor[backBufferIdx], clear_color_with_alpha, 0, nullptr);
+    m_pd3dCommandList->OMSetRenderTargets(1, &m_mainRenderTargetDescriptor[backBufferIdx], FALSE, nullptr);
+    m_pd3dCommandList->SetDescriptorHeaps(1, &m_pd3dSrvDescHeap);
+    ImGui_ImplDX12_RenderDrawData(ImGui::GetDrawData(), m_pd3dCommandList);
+    barrier.Transition.StateBefore = D3D12_RESOURCE_STATE_RENDER_TARGET;
+    barrier.Transition.StateAfter = D3D12_RESOURCE_STATE_PRESENT;
+    m_pd3dCommandList->ResourceBarrier(1, &barrier);
+    m_pd3dCommandList->Close();
 
     m_pd3dCommandQueue->ExecuteCommandLists(1, (ID3D12CommandList* const*)&m_pd3dCommandList);
 
@@ -369,11 +371,6 @@ LRESULT CALLBACK WINAPI Window::WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPAR
 
 Window::~Window()
 {
-    // Cleanup
-    ImGui_ImplDX12_Shutdown();
-    ImGui_ImplWin32_Shutdown();
-    ImGui::DestroyContext();
-
     CleanupDeviceD3D();
     DestroyWindow(m_hwnd);
     UnregisterClassW(m_windowClass.lpszClassName, m_windowClass.hInstance);

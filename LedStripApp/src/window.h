@@ -39,6 +39,7 @@ public:
 	void Render();
 	bool IsOpen();
 	void WaitForLastSubmittedFrame();
+	FrameContext* WaitForNextFrameResources();
 	inline HWND GetHandle() const { return m_hwnd; }
 	inline ID3D12Device* GetDevice() const { return m_pd3dDevice; }
 	inline int GetFramesInFlight() const { return m_numFramesInFlight; }
@@ -53,7 +54,6 @@ private:
 	void CleanupDeviceD3D();
 	void CreateRenderTarget();
 	void CleanupRenderTarget();
-	FrameContext* WaitForNextFrameResources();
 	static LRESULT CALLBACK WINAPI WndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam);
 };
 

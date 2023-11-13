@@ -1,13 +1,13 @@
 #pragma once
 
 #include "window.h"
-#include "ledstrip.h"
+#include "blemanager.h"
 
 class App
 {
 private:
 	Window m_window;
-	LedStrip m_ledStrip;
+	BLEManager m_ledManager;
 
 public:
 	App();
@@ -18,9 +18,6 @@ public:
 	~App();
 
 private:
-	const char* OnScanAndConnectClicked();
-	void ChangeLedStripColor(const float* color);
-
 	void InitImgui();
 	void RenderUI();
 };

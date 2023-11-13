@@ -3,7 +3,7 @@
 #include "imgui_impl_win32.h"
 #include "imgui_impl_dx12.h"
 
-App::App() : m_ledStrip(), m_window() {}
+App::App() : m_ledManager(), m_window() {}
 
 bool App::Init()
 {
@@ -40,9 +40,6 @@ void App::InitImgui()
 
 void App::RenderUI()
 {
-    const char* connectionStatus = "";
-    ImVec4 color = ImVec4(0.0f, 0.0f, 0.0f, 1.0f);
-
     // Start the Dear ImGui frame
     ImGui_ImplDX12_NewFrame();
     ImGui_ImplWin32_NewFrame();
@@ -54,13 +51,13 @@ void App::RenderUI()
     ImGui::Begin("App Window", NULL, ImGuiWindowFlags_NoDecoration | ImGuiWindowFlags_NoResize);
     if (ImGui::Button("Scan and Connect"))
     {
-        connectionStatus = OnScanAndConnectClicked();
+        m_ledManager.ScanAndConnect();
     }
-    if (ImGui::ColorEdit3("clear color", (float*)&color))
+    if (ImGui::ColorEdit3("clear color", m_ledManager.color))
     {
-        ChangeLedStripColor((float*)&color);
+        m_ledManager.UpdateLedColor();
     }
-    ImGui::Text(connectionStatus);
+    ImGui::Text(m_ledManager.connectionStatus);
     ImGui::End();
     ImGui::PopStyleVar(1);
 
@@ -73,7 +70,6 @@ void App::Run()
     ImVec4 clear_color = ImVec4(0.0f, 0.0f, 0.0f, 1.00f);
     while (m_window.IsOpen())
     {
-        m_window.PreRender();
         RenderUI();
         m_window.Render();
     }
@@ -81,14 +77,8 @@ void App::Run()
     m_window.WaitForLastSubmittedFrame();
 }
 
-const char* App::OnScanAndConnectClicked()
-{
-	return m_ledStrip.ScanAndConnect();
+App::~App() {
+    ImGui_ImplDX12_Shutdown();
+    ImGui_ImplWin32_Shutdown();
+    ImGui::DestroyContext();
 }
-
-void App::ChangeLedStripColor(const float* color)
-{
-	m_ledStrip.ChangeLEDColor(color);
-}
-
-App::~App() {}
