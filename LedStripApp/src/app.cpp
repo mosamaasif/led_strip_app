@@ -3,7 +3,9 @@
 #include "imgui_impl_win32.h"
 #include "imgui_impl_dx12.h"
 
-App::App() : m_ledManager(), m_window() {}
+App::App() : m_ledManager(), m_window() {
+    m_ledManager.ScanAndConnect();
+}
 
 bool App::Init()
 {
@@ -51,7 +53,14 @@ void App::RenderUI()
     ImGui::Begin("App Window", NULL, ImGuiWindowFlags_NoDecoration | ImGuiWindowFlags_NoResize);
     if (ImGui::Button("Scan and Connect"))
     {
-        m_ledManager.ScanAndConnect();
+        if (!m_ledManager.IsScanning())
+        {
+            m_ledManager.ScanAndConnect();
+        }
+    }
+    if (m_ledManager.IsConnected() && ImGui::Button(m_ledManager.IsDeviceOn() ? "Off" : "On"))
+    {
+        m_ledManager.SetDeviceOn();
     }
     if (ImGui::ColorEdit3("clear color", m_ledManager.color))
     {
@@ -67,9 +76,13 @@ void App::RenderUI()
 
 void App::Run()
 {
-    ImVec4 clear_color = ImVec4(0.0f, 0.0f, 0.0f, 1.00f);
+    ImVec4 clear_color = ImVec4(0.0f, 0.0f, 0.0f, 1.0f);
     while (m_window.IsOpen())
     {
+        if (!m_ledManager.IsScanning())
+        {
+            m_ledManager.JoinScanningThread();
+        }
         RenderUI();
         m_window.Render();
     }
