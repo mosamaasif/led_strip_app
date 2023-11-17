@@ -57,7 +57,7 @@ void App::RenderUI()
     {
         m_ledManager.UpdateLedColor();
     }
-    ImGui::Text(m_ledManager.connectionStatus);
+    ImGui::Text(m_ledManager.ConnectionStatusStr());
     ImGui::End();
     ImGui::PopStyleVar(1);
 

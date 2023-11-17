@@ -1,57 +1,71 @@
 #include "blemanager.h"
+#include <thread>
 
-BLEManager::BLEManager(): color(new float[4]), connectionStatus("") {}
+BLEManager::BLEManager(): color(new float[4]), connectionStatus(BLESTATUS::UNDEFINED) {}
 
 void BLEManager::ScanAndConnect()
 {
-    //if (!SimpleBLE::Adapter::bluetooth_enabled()) {
-    //    return BLT_NOT_ENABLED;
-    //}
+    connectionStatus = BLESTATUS::SCANNING;
+    std::vector<SimpleBLE::Adapter> adapters = SimpleBLE::Adapter::get_adapters();
+    SimpleBLE::Adapter adapter = adapters[0];
 
-    //auto adapters = SimpleBLE::Adapter::get_adapters();
-    //if (adapters.empty()) {
-    //    return ADAPTER_NOT_FOUND;
-    //}
+    SimpleBLE::Peripheral peri;
+    bool deviceFound = false;
+    adapter.set_callback_on_scan_found([peri, deviceFound, adapter](SimpleBLE::Peripheral peripheral) mutable {
+        if (peripheral.identifier().compare("QHM-1151") == 0)
+        {
+            deviceFound = true;
+            peri = peripheral;
+            adapter.scan_stop();
+        }
+    });
 
-    //auto adapter = adapters[0];
+    if (!deviceFound)
+    {
+        connectionStatus = BLESTATUS::BLE_PERIPHERAL_NOT_FOUND;
+        return;
+    }
 
-    //// Scan for peripherals for 5000 milliseconds
-    //adapter.scan_for(5000);
+    m_peripheral = peri;
+    m_peripheral.connect();
 
-    //// Get the list of peripherals found
-    //std::vector<SimpleBLE::Peripheral> peripherals = adapter.scan_get_results();
-
-    //for (int i = 0; i < peripherals.size(); i++)
-    //{
-    //    if (peripherals[i].identifier().compare("QHM-1151")) {
-    //        peripheral = peripherals[i];
-    //        break;
-    //    }
-    //}
-
-    //if (peripheral.initialized())
-    //{
-    //    peripheral.connect();
-    //    for (auto service : peripheral.services()) {
-    //        for (auto characteristic : service.characteristics()) {
-
-    //        }
-    //    }
-    //}
-
-    //connectionStatus = CONNECTED_STATUS;
+    connectionStatus = !m_peripheral.is_connected() ? BLESTATUS::FAILED_TO_CONNECT : BLESTATUS::CONNECTED;
 }
 
 void BLEManager::UpdateLedColor()
 {
-    /*if (peripheral.initialized())
-    {
+    
+}
 
-    }*/
+const char* BLEManager::ConnectionStatusStr()
+{
+    const char* str = "";
+    switch (connectionStatus)
+    {
+    case BLESTATUS::SCANNING:
+        str = "Scanning for device...";
+        break;
+    case BLESTATUS::CONNECTED:
+        str = "Connected!";
+        break;
+    case BLESTATUS::FAILED_TO_CONNECT:
+        str = "Failed to connect!";
+        break;
+    case BLESTATUS::BLE_PERIPHERAL_NOT_FOUND:
+        str = "Could not find the peripheral!";
+        break;
+    case BLESTATUS::BLT_NOT_ENABLED:
+        str = "Could not find a bluetooth adapter!";
+        break;
+    default:
+        str = "";
+        break;
+    }
+    
+    return str;
 }
 
 BLEManager::~BLEManager()
 {
     delete[] color;
-    delete[] connectionStatus;
 }
