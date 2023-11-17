@@ -2,6 +2,7 @@
 #include "simpleble/Exceptions.h"
 #include <iostream>
 #include <sstream>
+#include <iomanip>
 
 BLEManager::BLEManager() : color(new float[4](0.0f)), connectionStatus(BLESTATUS::UNDEFINED), m_IsScanning(false), m_IsDeviceOn(false), m_Peripheral(nullptr) {}
 
@@ -76,10 +77,32 @@ void BLEManager::SetDeviceOn()
 
 void BLEManager::UpdateLedColor()
 {
-    /*std::stringstream stream;
-    stream << std::hex << "56" << color[0] << color[1] << color[2] << "00" << "F0" << "AA";
-    std::cout << stream.str();
-    m_Peripheral->write_request(WRITE_SERVICE, WRITE_CHARACTERISTIC, stream.str());*/
+    std::vector<char> bytes;
+
+    bytes.push_back(0x56);
+    bytes.push_back(static_cast<char>(color[0] * 255.999));
+    bytes.push_back(static_cast<char>(color[1] * 255.999));
+    bytes.push_back(static_cast<char>(color[2] * 255.999));
+    bytes.push_back(0x00);
+    bytes.push_back(0xF0);
+    bytes.push_back(0xAA);
+
+    m_Peripheral->write_request(WRITE_SERVICE, WRITE_CHARACTERISTIC, SimpleBLE::ByteArray(bytes.data(), bytes.size()));
+}
+
+void BLEManager::UpdateBrightness()
+{
+    std::vector<char> bytes;
+
+    bytes.push_back(0x56);
+    bytes.push_back(static_cast<char>(color[0] * brightness * 255.999));
+    bytes.push_back(static_cast<char>(color[1] * brightness * 255.999));
+    bytes.push_back(static_cast<char>(color[2] * brightness * 255.999));
+    bytes.push_back(0x00);
+    bytes.push_back(0xF0);
+    bytes.push_back(0xAA);
+
+    m_Peripheral->write_request(WRITE_SERVICE, WRITE_CHARACTERISTIC, SimpleBLE::ByteArray(bytes.data(), bytes.size()));
 }
 
 bool BLEManager::IsConnected()

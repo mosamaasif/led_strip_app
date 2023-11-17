@@ -2,6 +2,7 @@
 
 #include "simpleble/SimpleBLE.h"
 #include <thread>
+#include <vector>
 
 enum BLESTATUS {
 	UNDEFINED,
@@ -17,6 +18,7 @@ class BLEManager
 {
 public:
 	float* color;
+	float brightness;
 	BLESTATUS connectionStatus;
 private:
 	SimpleBLE::Peripheral* m_Peripheral;
@@ -34,6 +36,7 @@ public:
 	void ScanAndConnect();
 	void SetDeviceOn();
 	void UpdateLedColor();
+	void UpdateBrightness();
 	const char* ConnectionStatusStr();
 	void JoinScanningThread();
 	bool IsConnected();

@@ -62,9 +62,13 @@ void App::RenderUI()
     {
         m_ledManager.SetDeviceOn();
     }
-    if (ImGui::ColorEdit3("clear color", m_ledManager.color))
+    if (ImGui::ColorEdit3("Color", m_ledManager.color))
     {
         m_ledManager.UpdateLedColor();
+    }
+    if (ImGui::SliderFloat("Brightness", &m_ledManager.brightness, 0, 1))
+    {
+        m_ledManager.UpdateBrightness();
     }
     ImGui::Text(m_ledManager.ConnectionStatusStr());
     ImGui::End();
