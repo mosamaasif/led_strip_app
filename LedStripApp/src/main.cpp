@@ -1,16 +1,15 @@
 #include <iostream>
 #include "app.h"
 
-// Main code
-int main(int, char**)
+int main()
 {
-    App* app = new App();
-    if (!app->Init())
+    App app = App();
+    if (!app.Init())
     {
-        std::cout << "Failed to create an App" << std::endl;
-        return -1;
+        std::cout << "Failed to create the App" << std::endl;
+        return EXIT_FAILURE;
     }
 
-    app->Run();
-    return 0;
+    app.Run();
+    return EXIT_SUCCESS;
 }

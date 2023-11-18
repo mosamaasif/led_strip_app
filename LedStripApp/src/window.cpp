@@ -1,6 +1,4 @@
 #include "window.h"
-#include "imgui_impl_win32.h"
-#include "imgui_impl_dx12.h"
 #include <tchar.h>
 
 #ifdef _DEBUG
@@ -34,19 +32,31 @@ Window::Window()
 
 bool Window::Init()
 {
-    InitWindow();
+    if (!InitWindow())
+    {
+        return false;
+    }
     if (!InitD3D())
     {
         return false;
     }
+    if (!InitImGui())
+    {
+        return false;
+    }
+
+    m_IsOpen = true;
+    return true;
 }
 
-void Window::InitWindow()
+bool Window::InitWindow()
 {
     // Create application window
     m_windowClass = { sizeof(m_windowClass), CS_CLASSDC, WndProc, 0L, 0L, GetModuleHandle(nullptr), nullptr, nullptr, nullptr, nullptr, L"Led Strip App", nullptr };
     RegisterClassExW(&m_windowClass);
     m_hwnd = CreateWindowW(m_windowClass.lpszClassName, L"Led Strip Controller", WS_OVERLAPPEDWINDOW, 50, 50, 400, 400, nullptr, nullptr, m_windowClass.hInstance, this);
+    
+    return m_hwnd != nullptr;
 }
 
 bool Window::InitD3D()
@@ -58,29 +68,47 @@ bool Window::InitD3D()
         UnregisterClassW(m_windowClass.lpszClassName, m_windowClass.hInstance);
         return false;
     }
+    return true;
 }
 
-bool Window::IsOpen()
+bool Window::InitImGui()
 {
-    bool isOpen = true;
-    MSG msg;
-    while (PeekMessage(&msg, nullptr, 0U, 0U, PM_REMOVE))
+    // Show the window
+    ShowWindow(m_hwnd, SW_SHOWDEFAULT);
+    UpdateWindow(m_hwnd);
+
+    // Setup Dear ImGui context
+    IMGUI_CHECKVERSION();
+    if (ImGui::CreateContext() == nullptr)
     {
-        TranslateMessage(&msg);
-        DispatchMessage(&msg);
-        if (msg.message == WM_QUIT)
-            isOpen = false;
+        return false;
     }
-    return isOpen;
-}
+    ImGuiIO& io = ImGui::GetIO(); (void)io;
+    io.ConfigFlags |= ImGuiConfigFlags_NavEnableKeyboard;     // Enable Keyboard Controls
 
-void Window::PreRender()
-{
+    // Setup Dear ImGui style
+    ImGui::StyleColorsDark();
 
+    // Setup Platform/Renderer backends
+    if (!ImGui_ImplWin32_Init(m_hwnd))
+    {
+        return false;
+    }
+    if (!ImGui_ImplDX12_Init(m_pd3dDevice, NUM_FRAMES_IN_FLIGHT,
+        DXGI_FORMAT_R8G8B8A8_UNORM, m_pd3dSrvDescHeap,
+        m_pd3dSrvDescHeap->GetCPUDescriptorHandleForHeapStart(),
+        m_pd3dSrvDescHeap->GetGPUDescriptorHandleForHeapStart()))
+    {
+        return false;
+    }
+
+    return true;
 }
 
 void Window::Render()
 {
+    HandleWindowMessages();
+
     ImVec4 clear_color = ImVec4(0.0f, 0.0f, 0.0f, 1.0f);
     FrameContext* frameCtx = WaitForNextFrameResources();
     UINT backBufferIdx = m_pSwapChain->GetCurrentBackBufferIndex();
@@ -116,13 +144,25 @@ void Window::Render()
     frameCtx->FenceValue = fenceValue;
 }
 
+void Window::HandleWindowMessages()
+{
+    MSG msg;
+    while (PeekMessage(&msg, nullptr, 0U, 0U, PM_REMOVE))
+    {
+        TranslateMessage(&msg);
+        DispatchMessage(&msg);
+        if (msg.message == WM_QUIT)
+            m_IsOpen = false;
+    }
+}
+
 bool Window::CreateDeviceD3D(HWND hWnd)
 {
     // Setup swap chain
     DXGI_SWAP_CHAIN_DESC1 sd;
     {
         ZeroMemory(&sd, sizeof(sd));
-        sd.BufferCount = m_numBackBuffers;
+        sd.BufferCount = NUM_BACK_BUFFERS;
         sd.Width = 0;
         sd.Height = 0;
         sd.Format = DXGI_FORMAT_R8G8B8A8_UNORM;
@@ -165,7 +205,7 @@ bool Window::CreateDeviceD3D(HWND hWnd)
     {
         D3D12_DESCRIPTOR_HEAP_DESC desc = {};
         desc.Type = D3D12_DESCRIPTOR_HEAP_TYPE_RTV;
-        desc.NumDescriptors = m_numBackBuffers;
+        desc.NumDescriptors = NUM_BACK_BUFFERS;
         desc.Flags = D3D12_DESCRIPTOR_HEAP_FLAG_NONE;
         desc.NodeMask = 1;
         if (m_pd3dDevice->CreateDescriptorHeap(&desc, IID_PPV_ARGS(&m_pd3dRtvDescHeap)) != S_OK)
@@ -173,7 +213,7 @@ bool Window::CreateDeviceD3D(HWND hWnd)
 
         SIZE_T rtvDescriptorSize = m_pd3dDevice->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_RTV);
         D3D12_CPU_DESCRIPTOR_HANDLE rtvHandle = m_pd3dRtvDescHeap->GetCPUDescriptorHandleForHeapStart();
-        for (UINT i = 0; i < m_numBackBuffers; i++)
+        for (UINT i = 0; i < NUM_BACK_BUFFERS; i++)
         {
             m_mainRenderTargetDescriptor[i] = rtvHandle;
             rtvHandle.ptr += rtvDescriptorSize;
@@ -198,7 +238,7 @@ bool Window::CreateDeviceD3D(HWND hWnd)
             return false;
     }
 
-    for (UINT i = 0; i < m_numFramesInFlight; i++)
+    for (UINT i = 0; i < NUM_FRAMES_IN_FLIGHT; i++)
         if (m_pd3dDevice->CreateCommandAllocator(D3D12_COMMAND_LIST_TYPE_DIRECT, IID_PPV_ARGS(&m_frameContext[i].CommandAllocator)) != S_OK)
             return false;
 
@@ -224,7 +264,7 @@ bool Window::CreateDeviceD3D(HWND hWnd)
             return false;
         swapChain1->Release();
         dxgiFactory->Release();
-        m_pSwapChain->SetMaximumFrameLatency(m_numBackBuffers);
+        m_pSwapChain->SetMaximumFrameLatency(NUM_BACK_BUFFERS);
         m_hSwapChainWaitableObject = m_pSwapChain->GetFrameLatencyWaitableObject();
     }
 
@@ -232,12 +272,23 @@ bool Window::CreateDeviceD3D(HWND hWnd)
     return true;
 }
 
+void Window::CreateRenderTarget()
+{
+    for (UINT i = 0; i < NUM_BACK_BUFFERS; i++)
+    {
+        ID3D12Resource* pBackBuffer = nullptr;
+        m_pSwapChain->GetBuffer(i, IID_PPV_ARGS(&pBackBuffer));
+        m_pd3dDevice->CreateRenderTargetView(pBackBuffer, nullptr, m_mainRenderTargetDescriptor[i]);
+        m_mainRenderTargetResource[i] = pBackBuffer;
+    }
+}
+
 void Window::CleanupDeviceD3D()
 {
     CleanupRenderTarget();
     if (m_pSwapChain) { m_pSwapChain->SetFullscreenState(false, nullptr); m_pSwapChain->Release(); m_pSwapChain = nullptr; }
     if (m_hSwapChainWaitableObject != nullptr) { CloseHandle(m_hSwapChainWaitableObject); }
-    for (UINT i = 0; i < m_numFramesInFlight; i++)
+    for (UINT i = 0; i < NUM_FRAMES_IN_FLIGHT; i++)
         if (m_frameContext[i].CommandAllocator) { m_frameContext[i].CommandAllocator->Release(); m_frameContext[i].CommandAllocator = nullptr; }
     if (m_pd3dCommandQueue) { m_pd3dCommandQueue->Release(); m_pd3dCommandQueue = nullptr; }
     if (m_pd3dCommandList) { m_pd3dCommandList->Release(); m_pd3dCommandList = nullptr; }
@@ -257,28 +308,17 @@ void Window::CleanupDeviceD3D()
 #endif
 }
 
-void Window::CreateRenderTarget()
-{
-    for (UINT i = 0; i < m_numBackBuffers; i++)
-    {
-        ID3D12Resource* pBackBuffer = nullptr;
-        m_pSwapChain->GetBuffer(i, IID_PPV_ARGS(&pBackBuffer));
-        m_pd3dDevice->CreateRenderTargetView(pBackBuffer, nullptr, m_mainRenderTargetDescriptor[i]);
-        m_mainRenderTargetResource[i] = pBackBuffer;
-    }
-}
-
 void Window::CleanupRenderTarget()
 {
     WaitForLastSubmittedFrame();
 
-    for (UINT i = 0; i < m_numBackBuffers; i++)
+    for (UINT i = 0; i < NUM_BACK_BUFFERS; i++)
         if (m_mainRenderTargetResource[i]) { m_mainRenderTargetResource[i]->Release(); m_mainRenderTargetResource[i] = nullptr; }
 }
 
 void Window::WaitForLastSubmittedFrame()
 {
-    FrameContext* frameCtx = &m_frameContext[m_frameIndex % m_numFramesInFlight];
+    FrameContext* frameCtx = &m_frameContext[m_frameIndex % NUM_FRAMES_IN_FLIGHT];
 
     UINT64 fenceValue = frameCtx->FenceValue;
     if (fenceValue == 0)
@@ -300,7 +340,7 @@ FrameContext* Window::WaitForNextFrameResources()
     HANDLE waitableObjects[] = { m_hSwapChainWaitableObject, nullptr };
     DWORD numWaitableObjects = 1;
 
-    FrameContext* frameCtx = &m_frameContext[nextFrameIndex % m_numFramesInFlight];
+    FrameContext* frameCtx = &m_frameContext[nextFrameIndex % NUM_FRAMES_IN_FLIGHT];
     UINT64 fenceValue = frameCtx->FenceValue;
     if (fenceValue != 0) // means no m_fence was signaled
     {

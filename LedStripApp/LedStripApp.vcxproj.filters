@@ -45,7 +45,7 @@
     <ClCompile Include="src\window.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="src\blemaanger.cpp">
+    <ClCompile Include="src\ledcontroller.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
@@ -80,7 +80,7 @@
     <ClInclude Include="src\window.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="src\blemanager.h">
+    <ClInclude Include="src\ledcontroller.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="src\simpleble\Adapter.h">

@@ -1,43 +1,16 @@
 #include "app.h"
 #include "imgui.h"
-#include "imgui_impl_win32.h"
-#include "imgui_impl_dx12.h"
 
-App::App() : m_ledManager(), m_window() {
-    m_ledManager.ScanAndConnect();
-}
+App::App() : m_LedController(), m_Window() {}
 
 bool App::Init()
 {
-	if (!m_window.Init())
+	if (!m_Window.Init())
 	{
 		return false;
 	}
-	InitImgui();
+    m_LedController.ScanAndConnect();
 	return true;
-}
-
-void App::InitImgui()
-{
-    // Show the window
-    ShowWindow(m_window.GetHandle(), SW_SHOWDEFAULT);
-    UpdateWindow(m_window.GetHandle());
-
-    // Setup Dear ImGui context
-    IMGUI_CHECKVERSION();
-    ImGui::CreateContext();
-    ImGuiIO& io = ImGui::GetIO(); (void)io;
-    io.ConfigFlags |= ImGuiConfigFlags_NavEnableKeyboard;     // Enable Keyboard Controls
-
-    // Setup Dear ImGui style
-    ImGui::StyleColorsDark();
-
-    // Setup Platform/Renderer backends
-    ImGui_ImplWin32_Init(m_window.GetHandle());
-    ImGui_ImplDX12_Init(m_window.GetDevice(), m_window.GetFramesInFlight(),
-        DXGI_FORMAT_R8G8B8A8_UNORM, m_window.GetSrvDescHeap(),
-        m_window.GetSrvDescHeap()->GetCPUDescriptorHandleForHeapStart(),
-        m_window.GetSrvDescHeap()->GetGPUDescriptorHandleForHeapStart());
 }
 
 void App::RenderUI()
@@ -51,26 +24,32 @@ void App::RenderUI()
     ImGui::SetNextWindowSize(ImGui::GetIO().DisplaySize);
     ImGui::PushStyleVar(ImGuiStyleVar_WindowRounding, 0.0f);
     ImGui::Begin("App Window", NULL, ImGuiWindowFlags_NoDecoration | ImGuiWindowFlags_NoResize);
-    if (ImGui::Button("Scan and Connect"))
+
+    // drawing the ui elements on the windows
+    ImGui::Text(m_LedController.ConnectionStatusStr());
+    if (!m_LedController.IsConnected())
     {
-        if (!m_ledManager.IsScanning())
+        if (ImGui::Button("Connect"))
         {
-            m_ledManager.ScanAndConnect();
+            m_LedController.ScanAndConnect();
         }
     }
-    if (m_ledManager.IsConnected() && ImGui::Button(m_ledManager.IsDeviceOn() ? "Off" : "On"))
+    else
     {
-        m_ledManager.SetDeviceOn();
+        if (ImGui::Button(m_LedController.IsDeviceOn() ? "Off" : "On"))
+        {
+            m_LedController.ToggleDevice();
+        }
+        if (ImGui::ColorEdit3("Color", m_LedController.color))
+        {
+            m_LedController.UpdateColor();
+        }
+        if (ImGui::SliderFloat("Brightness", &m_LedController.brightness, 0, 1))
+        {
+            m_LedController.UpdateBrightness();
+        }
     }
-    if (ImGui::ColorEdit3("Color", m_ledManager.color))
-    {
-        m_ledManager.UpdateLedColor();
-    }
-    if (ImGui::SliderFloat("Brightness", &m_ledManager.brightness, 0, 1))
-    {
-        m_ledManager.UpdateBrightness();
-    }
-    ImGui::Text(m_ledManager.ConnectionStatusStr());
+    
     ImGui::End();
     ImGui::PopStyleVar(1);
 
@@ -80,18 +59,14 @@ void App::RenderUI()
 
 void App::Run()
 {
-    ImVec4 clear_color = ImVec4(0.0f, 0.0f, 0.0f, 1.0f);
-    while (m_window.IsOpen())
+    while (m_Window.IsOpen())
     {
-        if (!m_ledManager.IsScanning())
-        {
-            m_ledManager.JoinScanningThread();
-        }
+        m_LedController.TryJoinScanningThread();
         RenderUI();
-        m_window.Render();
+        m_Window.Render();
     }
 
-    m_window.WaitForLastSubmittedFrame();
+    m_Window.WaitForLastSubmittedFrame();
 }
 
 App::~App() {

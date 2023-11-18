@@ -14,36 +14,38 @@ enum BLESTATUS {
 	BLT_NOT_ENABLED,
 };
 
-class BLEManager
+class LEDController
 {
 public:
 	float* color;
 	float brightness;
-	BLESTATUS connectionStatus;
 private:
 	SimpleBLE::Peripheral* m_Peripheral;
 	bool m_IsScanning;
 	bool m_IsDeviceOn;
+	BLESTATUS m_ConnectionStatus;
 	std::thread m_ScanningThread;
 
+	const std::string LED_DEVICE_NAME = "QHM-1151";
 	const SimpleBLE::BluetoothUUID WRITE_SERVICE = "0000ffd5-0000-1000-8000-00805f9b34fb";
 	const SimpleBLE::BluetoothUUID WRITE_CHARACTERISTIC = "0000ffd9-0000-1000-8000-00805f9b34fb";
 	const std::string TURN_ON_COMMAND = "\xCC\x23\x33";
 	const std::string TURN_OFF_COMMAND = "\xCC\x24\x33";
 
 public:
-	BLEManager();
+	LEDController();
 	void ScanAndConnect();
-	void SetDeviceOn();
-	void UpdateLedColor();
+	void ToggleDevice();
+	void UpdateColor();
 	void UpdateBrightness();
 	const char* ConnectionStatusStr();
-	void JoinScanningThread();
+	void TryJoinScanningThread();
 	bool IsConnected();
-	inline bool IsScanning() const { return m_IsScanning; }
 	inline bool IsDeviceOn() const { return m_IsDeviceOn; }
-	~BLEManager();
+	~LEDController();
 
 private:
 	void ScanAndConnectInternal();
+	void UpdateColorInternal(float intensity);
+	std::vector<char> GenerateColorCommand(float intensity);
 };

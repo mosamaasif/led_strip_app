@@ -2,6 +2,8 @@
 
 #include <d3d12.h>
 #include <dxgi1_4.h>
+#include "imgui_impl_win32.h"
+#include "imgui_impl_dx12.h"
 
 struct FrameContext
 {
@@ -12,11 +14,11 @@ struct FrameContext
 class Window
 {
 private:
-	static const int m_numFramesInFlight = 3;
-	static const int m_numBackBuffers = 3;
+	static const int NUM_FRAMES_IN_FLIGHT = 3;
+	static const int NUM_BACK_BUFFERS = 3;
 	HWND m_hwnd;
 	WNDCLASSEXW m_windowClass;
-	FrameContext m_frameContext[m_numFramesInFlight];
+	FrameContext m_frameContext[NUM_FRAMES_IN_FLIGHT];
 	UINT m_frameIndex;
 	ID3D12Device* m_pd3dDevice;
 	ID3D12DescriptorHeap* m_pd3dRtvDescHeap;
@@ -28,32 +30,30 @@ private:
 	UINT64 m_fenceLastSignaledValue;
 	IDXGISwapChain3* m_pSwapChain;
 	HANDLE m_hSwapChainWaitableObject;
-	ID3D12Resource* m_mainRenderTargetResource[m_numBackBuffers];
-	D3D12_CPU_DESCRIPTOR_HANDLE  m_mainRenderTargetDescriptor[m_numBackBuffers];
+	ID3D12Resource* m_mainRenderTargetResource[NUM_BACK_BUFFERS];
+	D3D12_CPU_DESCRIPTOR_HANDLE  m_mainRenderTargetDescriptor[NUM_BACK_BUFFERS];
+	bool m_IsOpen;
 
 public:
 	Window();
 
 	bool Init();
-	void PreRender();
 	void Render();
-	bool IsOpen();
+	inline bool IsOpen() const { return m_IsOpen; }
 	void WaitForLastSubmittedFrame();
-	FrameContext* WaitForNextFrameResources();
-	inline HWND GetHandle() const { return m_hwnd; }
-	inline ID3D12Device* GetDevice() const { return m_pd3dDevice; }
-	inline int GetFramesInFlight() const { return m_numFramesInFlight; }
-	inline ID3D12DescriptorHeap* GetSrvDescHeap() const { return m_pd3dSrvDescHeap; }
 
 	~Window();
 
 private:
-	void InitWindow();
+	bool InitWindow();
 	bool InitD3D();
+	bool InitImGui();
 	bool CreateDeviceD3D(HWND hWnd);
-	void CleanupDeviceD3D();
 	void CreateRenderTarget();
+	FrameContext* WaitForNextFrameResources();
+	void CleanupDeviceD3D();
 	void CleanupRenderTarget();
+	void HandleWindowMessages();
 	static LRESULT CALLBACK WINAPI WndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam);
 };
 
