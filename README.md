@@ -16,4 +16,4 @@ There is an exe avail if you just want to use the app, however feel free to buil
 - Download Visual Studio, setup as per c++ development
 - Clone repo, ppen .sln file and build the project. Output will be a folder called bin/....
 
-![image](https://github.com/mosamaasif/led_strip_app/assets/13409110/3d1f3662-7214-48e8-8967-91dacd353703)
+![image](https://github.com/mosamaasif/led_strip_app/assets/13409110/9bfffe2a-c56f-4c3c-898f-446f2e1226eb)
