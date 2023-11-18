@@ -2,6 +2,7 @@
 
 #include "simpleble/SimpleBLE.h"
 #include <thread>
+#include <atomic>
 #include <vector>
 
 enum BLESTATUS {
@@ -21,7 +22,7 @@ public:
 	float brightness;
 private:
 	SimpleBLE::Peripheral* m_Peripheral;
-	bool m_IsScanning;
+	std::atomic_bool m_IsScanning;
 	bool m_IsDeviceOn;
 	BLESTATUS m_ConnectionStatus;
 	std::thread m_ScanningThread;
@@ -41,6 +42,7 @@ public:
 	const char* ConnectionStatusStr();
 	void TryJoinScanningThread();
 	bool IsConnected();
+	inline bool IsScanning() const { return m_IsScanning; }
 	inline bool IsDeviceOn() const { return m_IsDeviceOn; }
 	~LEDController();
 

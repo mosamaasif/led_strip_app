@@ -1,7 +1,10 @@
 #include "app.h"
 #include "imgui.h"
 
-App::App() : m_LedController(), m_Window() {}
+App::App() : m_LedController(), m_Window() 
+{
+    m_LedController.ScanAndConnect();
+}
 
 bool App::Init()
 {
@@ -9,7 +12,6 @@ bool App::Init()
 	{
 		return false;
 	}
-    m_LedController.ScanAndConnect();
 	return true;
 }
 
@@ -27,26 +29,28 @@ void App::RenderUI()
 
     // drawing the ui elements on the windows
     ImGui::Text(m_LedController.ConnectionStatusStr());
-    if (!m_LedController.IsConnected())
-    {
-        if (ImGui::Button("Connect"))
+    if (!m_LedController.IsScanning()) {
+        if (!m_LedController.IsConnected())
         {
-            m_LedController.ScanAndConnect();
+            if (ImGui::Button("Connect"))
+            {
+                m_LedController.ScanAndConnect();
+            }
         }
-    }
-    else
-    {
-        if (ImGui::Button(m_LedController.IsDeviceOn() ? "Off" : "On"))
+        else
         {
-            m_LedController.ToggleDevice();
-        }
-        if (ImGui::ColorEdit3("Color", m_LedController.color))
-        {
-            m_LedController.UpdateColor();
-        }
-        if (ImGui::SliderFloat("Brightness", &m_LedController.brightness, 0, 1))
-        {
-            m_LedController.UpdateBrightness();
+            if (ImGui::Button(m_LedController.IsDeviceOn() ? "Off" : "On"))
+            {
+                m_LedController.ToggleDevice();
+            }
+            if (ImGui::ColorEdit3("Color", m_LedController.color))
+            {
+                m_LedController.UpdateColor();
+            }
+            if (ImGui::SliderFloat("Brightness", &m_LedController.brightness, 0, 1))
+            {
+                m_LedController.UpdateBrightness();
+            }
         }
     }
     

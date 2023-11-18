@@ -412,6 +412,9 @@ LRESULT CALLBACK WINAPI Window::WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPAR
 Window::~Window()
 {
     CleanupDeviceD3D();
-    DestroyWindow(m_hwnd);
+    if (m_hwnd != nullptr)
+    {
+        DestroyWindow(m_hwnd);
+    }
     UnregisterClassW(m_windowClass.lpszClassName, m_windowClass.hInstance);
 }

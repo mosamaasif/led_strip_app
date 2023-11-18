@@ -167,7 +167,14 @@ const char* LEDController::ConnectionStatusStr()
 
 LEDController::~LEDController()
 {
-    m_Peripheral->disconnect();
-    delete m_Peripheral;
+    if (m_ScanningThread.joinable())
+    {
+        m_ScanningThread.join();
+    }
+    if (m_Peripheral != nullptr) 
+    {
+        m_Peripheral->disconnect();
+        delete m_Peripheral;
+    }
     delete[] color;
 }
