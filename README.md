@@ -2,7 +2,7 @@
 
 NOTE: `WINDOW ONLY FOR NOW`
 
-Purchased an LED Strip from Ali Express that had an app to control it called "Happy Lighting". Since I dind't want to use it and the led strip was attached to my workstation table, I decided to write this simple app to control the LED. `It's stil WIP as far as cleanup and UI improvements go`, but it works fine and can do the follwoing:
+Purchased an LED Strip from Ali Express that had an app to control it called "Happy Lighting". Since I didn't want to use it and the led strip was attached to my workstation table, I decided to write this simple app to control the LED. `It's stil WIP as far as cleanup and UI improvements go`, but it works fine and can do the follwoing:
 
 - On launch scans for the device and connects if found (scan by name, you can edit this part as per your need. There is a file called data.txt that is stored in Documents/LEDStripApp)
 - If no peripheral found, or no blt is not on it shows relevant error and a connect button
@@ -16,4 +16,4 @@ There is an exe avail if you just want to use the app, however feel free to buil
 - Download Visual Studio, setup as per c++ development
 - Clone repo, ppen .sln file and build the project. Output will be a folder called bin/....
 
-![image](https://github.com/mosamaasif/led_strip_app/assets/13409110/9bfffe2a-c56f-4c3c-898f-446f2e1226eb)
+![Screenshot 2023-11-18 232800](https://github.com/mosamaasif/led_strip_app/assets/13409110/9319fc2b-7e7d-414c-a379-060cc9535f1e)
