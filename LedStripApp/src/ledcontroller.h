@@ -24,8 +24,8 @@ private:
 	const std::string LED_DEVICE_NAME = "QHM-1151";
 	const SimpleBLE::BluetoothUUID WRITE_SERVICE = "0000ffd5-0000-1000-8000-00805f9b34fb";
 	const SimpleBLE::BluetoothUUID WRITE_CHARACTERISTIC = "0000ffd9-0000-1000-8000-00805f9b34fb";
-	const std::string TURN_ON_COMMAND = "\xCC\x23\x33";
-	const std::string TURN_OFF_COMMAND = "\xCC\x24\x33";
+	const SimpleBLE::ByteArray TURN_ON_COMMAND = { (char)0xCC, (char)0x23, (char)0x33 };
+	const SimpleBLE::ByteArray TURN_OFF_COMMAND = { (char)0xCC, (char)0x24, (char)0x33 };
 
 	SimpleBLE::Peripheral* m_Peripheral;
 	std::atomic_bool m_IsScanning;
@@ -36,6 +36,7 @@ private:
 public:
 	LEDController();
 	void ScanAndConnect();
+	void WriteCommand(SimpleBLE::ByteArray& command);
 	void ToggleDevice();
 	void UpdateColor();
 	void UpdateBrightness();

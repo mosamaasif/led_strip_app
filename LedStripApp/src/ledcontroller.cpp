@@ -87,7 +87,8 @@ void LEDController::ToggleDevice()
 
 void LEDController::SetDeviceOn(bool isOn)
 {
-    m_Peripheral->write_request(WRITE_SERVICE, WRITE_CHARACTERISTIC, isOn ? TURN_ON_COMMAND : TURN_OFF_COMMAND);
+    SimpleBLE::ByteArray command = isOn ? TURN_ON_COMMAND : TURN_OFF_COMMAND;
+    WriteCommand(command);
 }
 
 void LEDController::UpdateColor()
@@ -102,8 +103,9 @@ void LEDController::UpdateBrightness()
 
 void LEDController::UpdateColorInternal(float intensity)
 {
-    std::vector<char> command = GenerateColorCommand(intensity);
-    m_Peripheral->write_request(WRITE_SERVICE, WRITE_CHARACTERISTIC, SimpleBLE::ByteArray(command.data(), command.size()));
+    std::vector<char> cmdArr = GenerateColorCommand(intensity);
+    SimpleBLE::ByteArray command(cmdArr.data(), cmdArr.size());
+    WriteCommand(command);
 }
 
 std::vector<char> LEDController::GenerateColorCommand(float intensity)
@@ -124,6 +126,20 @@ std::vector<char> LEDController::GenerateColorCommand(float intensity)
 bool LEDController::IsConnected()
 {
     return m_Peripheral != nullptr && m_Peripheral->is_connected();
+}
+
+void LEDController::WriteCommand(SimpleBLE::ByteArray& command)
+{
+    try 
+    {
+        m_Peripheral->write_request(WRITE_SERVICE, WRITE_CHARACTERISTIC, command);
+    }
+    catch (SimpleBLE::Exception::BaseException ex)
+    {
+#if DEBUG
+        std::cerr << ex.what() << std::endl;
+#endif // DEBUG
+    }
 }
 
 void LEDController::TryJoinScanningThread()
