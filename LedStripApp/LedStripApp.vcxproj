@@ -172,6 +172,7 @@
     <ClCompile Include="src\main.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="resource.h" />
     <ClInclude Include="src\simpleble\Adapter.h" />
     <ClInclude Include="src\simpleble\AdapterSafe.h" />
     <ClInclude Include="src\simpleble\Characteristic.h" />
@@ -196,6 +197,12 @@
     <ClInclude Include="src\imgui_impl_dx12.h" />
     <ClInclude Include="src\imgui_impl_win32.h" />
     <ClInclude Include="src\ledcontroller.h" />
+  </ItemGroup>
+  <ItemGroup>
+    <ResourceCompile Include="LedStripApp.rc" />
+  </ItemGroup>
+  <ItemGroup>
+    <Image Include="..\..\..\..\..\Downloads\led.ico" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

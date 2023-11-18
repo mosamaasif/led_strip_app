@@ -54,7 +54,7 @@ bool Window::InitWindow()
     // Create application window
     m_windowClass = { sizeof(m_windowClass), CS_CLASSDC, WndProc, 0L, 0L, GetModuleHandle(nullptr), nullptr, nullptr, nullptr, nullptr, L"Led Strip App", nullptr };
     RegisterClassExW(&m_windowClass);
-    m_hwnd = CreateWindowW(m_windowClass.lpszClassName, L"Led Strip Controller", WS_OVERLAPPEDWINDOW, 50, 50, 400, 150, nullptr, nullptr, m_windowClass.hInstance, this);
+    m_hwnd = CreateWindowW(m_windowClass.lpszClassName, L"Led Strip Controller", WS_OVERLAPPEDWINDOW, 50, 50, 400, 400, nullptr, nullptr, m_windowClass.hInstance, this);
     
     return m_hwnd != nullptr;
 }
