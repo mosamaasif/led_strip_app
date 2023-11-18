@@ -1,17 +1,22 @@
 #include "ledcontroller.h"
 #include "simpleble/Exceptions.h"
 #include <iostream>
-#include <sstream>
-#include <iomanip>
 
 LEDController::LEDController()
 {
-    color = new float[4](0.0f);
-    brightness = 0.0f;
+    color = new float[3](1.0f, 1.0f, 1.0f);
+    brightness = 1.0f;
     m_ConnectionStatus = BLESTATUS::UNDEFINED;
     m_IsScanning = false;
     m_IsDeviceOn = false;
     m_Peripheral = nullptr;
+}
+
+void LEDController::LoadSettings()
+{
+    SetDeviceOn(m_IsDeviceOn);
+    // will also apply color since that's how the led command works
+    UpdateBrightness();
 }
 
 void LEDController::ScanAndConnect()
@@ -64,8 +69,8 @@ void LEDController::ScanAndConnectInternal()
         m_Peripheral->connect();
 
         m_ConnectionStatus = IsConnected() ? BLESTATUS::CONNECTED : BLESTATUS::FAILED_TO_CONNECT;
+        LoadSettings();
     }
-
     m_IsScanning = false;
 }
 
@@ -76,14 +81,13 @@ void LEDController::ToggleDevice()
         m_ConnectionStatus = BLESTATUS::BLE_PERIPHERAL_NOT_CONNECTED;
         return;
     }
-    try {
-        m_Peripheral->write_request(WRITE_SERVICE, WRITE_CHARACTERISTIC, m_IsDeviceOn ? TURN_OFF_COMMAND : TURN_ON_COMMAND);
-        m_IsDeviceOn = !m_IsDeviceOn;
-    }
-    catch (SimpleBLE::Exception::BaseException ex)
-    {
-        std::cout << ex.what() << std::endl;
-    }
+    m_IsDeviceOn = !m_IsDeviceOn;
+    SetDeviceOn(m_IsDeviceOn);
+}
+
+void LEDController::SetDeviceOn(bool isOn)
+{
+    m_Peripheral->write_request(WRITE_SERVICE, WRITE_CHARACTERISTIC, isOn ? TURN_ON_COMMAND : TURN_OFF_COMMAND);
 }
 
 void LEDController::UpdateColor()

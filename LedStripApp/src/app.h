@@ -18,5 +18,8 @@ public:
 	~App();
 
 private:
+	std::wstring FetchSettingsPath();
+	void LoadSettings();
+	void SaveSettings();
 	void RenderUI();
 };
