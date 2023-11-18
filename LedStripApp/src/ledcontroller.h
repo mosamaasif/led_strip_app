@@ -18,10 +18,10 @@ enum BLESTATUS {
 class LEDController
 {
 public:
+	char name[128];
 	float* color;
 	float brightness;
 private:
-	const std::string LED_DEVICE_NAME = "QHM-1151";
 	const SimpleBLE::BluetoothUUID WRITE_SERVICE = "0000ffd5-0000-1000-8000-00805f9b34fb";
 	const SimpleBLE::BluetoothUUID WRITE_CHARACTERISTIC = "0000ffd9-0000-1000-8000-00805f9b34fb";
 	const SimpleBLE::ByteArray TURN_ON_COMMAND = { (char)0xCC, (char)0x23, (char)0x33 };

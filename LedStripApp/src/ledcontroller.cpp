@@ -44,7 +44,7 @@ void LEDController::ScanAndConnectInternal()
 
     SimpleBLE::Peripheral peri;
     bool deviceFound = false;
-    const char* dName = LED_DEVICE_NAME.c_str();
+    char* dName = name;
     adapter.set_callback_on_scan_found([&dName, &peri, &deviceFound](SimpleBLE::Peripheral peripheral) mutable {
         if (peripheral.identifier().compare(dName) != 0)
         {

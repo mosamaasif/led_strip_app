@@ -7,10 +7,7 @@
 
 #pragma comment(lib, "shell32.lib")
 
-App::App() : m_LedController(), m_Window() 
-{
-    m_LedController.ScanAndConnect();
-}
+App::App() : m_LedController(), m_Window() {}
 
 bool App::Init()
 {
@@ -41,7 +38,11 @@ void App::LoadSettings()
     while (std::getline(file, line))
     {
         std::string value = line.substr(line.find_first_of("=") + 1);
-        if (line.find("on") != std::string::npos)
+        if (line.find("name") != std::string::npos)
+        {
+           memcpy(m_LedController.name, value.c_str(), value.size());
+        }
+        else if (line.find("on") != std::string::npos)
         {
             m_LedController.SetDeviceOnFlag(std::stoi(value));
         }
@@ -81,6 +82,7 @@ void App::SaveSettings()
     {
         return;
     }
+    file << "name=" << m_LedController.name << "\n";
     file << "on=" << m_LedController.IsDeviceOn() << "\n";
     file << "color=" << m_LedController.color[0] << " " << m_LedController.color[1] << " " << m_LedController.color[2] << "\n";
     file << "brightness=" << m_LedController.brightness << "\n";
@@ -120,6 +122,7 @@ void App::RenderUI()
     if (!m_LedController.IsScanning()) {
         if (!m_LedController.IsConnected())
         {
+            if (ImGui::InputText("Device Name", m_LedController.name, IM_ARRAYSIZE(m_LedController.name)));
             if (ImGui::Button("Connect"))
             {
                 m_LedController.ScanAndConnect();
