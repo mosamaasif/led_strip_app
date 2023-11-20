@@ -30,17 +30,17 @@ Window::Window()
     m_hSwapChainWaitableObject = nullptr;
 }
 
-bool Window::Init()
+bool Window::init()
 {
-    if (!InitWindow())
+    if (!initWindow())
     {
         return false;
     }
-    if (!InitD3D())
+    if (!initD3D())
     {
         return false;
     }
-    if (!InitImGui())
+    if (!initImGui())
     {
         return false;
     }
@@ -49,7 +49,7 @@ bool Window::Init()
     return true;
 }
 
-bool Window::InitWindow()
+bool Window::initWindow()
 {
     // Create application window
     m_windowClass = { sizeof(m_windowClass), CS_CLASSDC, WndProc, 0L, 0L, GetModuleHandle(nullptr), nullptr, nullptr, nullptr, nullptr, L"Led Strip App", nullptr };
@@ -59,19 +59,19 @@ bool Window::InitWindow()
     return m_hwnd != nullptr;
 }
 
-bool Window::InitD3D()
+bool Window::initD3D()
 {
     // Initialize Direct3D
-    if (!CreateDeviceD3D(m_hwnd))
+    if (!createDeviceD3D(m_hwnd))
     {
-        CleanupDeviceD3D();
+        cleanupDeviceD3D();
         UnregisterClassW(m_windowClass.lpszClassName, m_windowClass.hInstance);
         return false;
     }
     return true;
 }
 
-bool Window::InitImGui()
+bool Window::initImGui()
 {
     // Show the window
     ShowWindow(m_hwnd, SW_SHOWDEFAULT);
@@ -105,12 +105,12 @@ bool Window::InitImGui()
     return true;
 }
 
-void Window::Render()
+void Window::render()
 {
-    HandleWindowMessages();
+    handleWindowMessages();
 
     ImVec4 clear_color = ImVec4(0.0f, 0.0f, 0.0f, 1.0f);
-    FrameContext* frameCtx = WaitForNextFrameResources();
+    FrameContext* frameCtx = waitForNextFrameResources();
     UINT backBufferIdx = m_pSwapChain->GetCurrentBackBufferIndex();
     frameCtx->CommandAllocator->Reset();
 
@@ -144,7 +144,7 @@ void Window::Render()
     frameCtx->FenceValue = fenceValue;
 }
 
-void Window::HandleWindowMessages()
+void Window::handleWindowMessages()
 {
     MSG msg;
     while (PeekMessage(&msg, nullptr, 0U, 0U, PM_REMOVE))
@@ -156,7 +156,7 @@ void Window::HandleWindowMessages()
     }
 }
 
-bool Window::CreateDeviceD3D(HWND hWnd)
+bool Window::createDeviceD3D(HWND hWnd)
 {
     // Setup swap chain
     DXGI_SWAP_CHAIN_DESC1 sd;
@@ -268,11 +268,11 @@ bool Window::CreateDeviceD3D(HWND hWnd)
         m_hSwapChainWaitableObject = m_pSwapChain->GetFrameLatencyWaitableObject();
     }
 
-    CreateRenderTarget();
+    createRenderTarget();
     return true;
 }
 
-void Window::CreateRenderTarget()
+void Window::createRenderTarget()
 {
     for (UINT i = 0; i < NUM_BACK_BUFFERS; i++)
     {
@@ -283,9 +283,9 @@ void Window::CreateRenderTarget()
     }
 }
 
-void Window::CleanupDeviceD3D()
+void Window::cleanupDeviceD3D()
 {
-    CleanupRenderTarget();
+    cleanupRenderTarget();
     if (m_pSwapChain) { m_pSwapChain->SetFullscreenState(false, nullptr); m_pSwapChain->Release(); m_pSwapChain = nullptr; }
     if (m_hSwapChainWaitableObject != nullptr) { CloseHandle(m_hSwapChainWaitableObject); }
     for (UINT i = 0; i < NUM_FRAMES_IN_FLIGHT; i++)
@@ -308,15 +308,15 @@ void Window::CleanupDeviceD3D()
 #endif
 }
 
-void Window::CleanupRenderTarget()
+void Window::cleanupRenderTarget()
 {
-    WaitForLastSubmittedFrame();
+    waitForLastSubmittedFrame();
 
     for (UINT i = 0; i < NUM_BACK_BUFFERS; i++)
         if (m_mainRenderTargetResource[i]) { m_mainRenderTargetResource[i]->Release(); m_mainRenderTargetResource[i] = nullptr; }
 }
 
-void Window::WaitForLastSubmittedFrame()
+void Window::waitForLastSubmittedFrame()
 {
     FrameContext* frameCtx = &m_frameContext[m_frameIndex % NUM_FRAMES_IN_FLIGHT];
 
@@ -332,7 +332,7 @@ void Window::WaitForLastSubmittedFrame()
     WaitForSingleObject(m_fenceEvent, INFINITE);
 }
 
-FrameContext* Window::WaitForNextFrameResources()
+FrameContext* Window::waitForNextFrameResources()
 {
     UINT nextFrameIndex = m_frameIndex + 1;
     m_frameIndex = nextFrameIndex;
@@ -397,11 +397,11 @@ LRESULT CALLBACK WINAPI Window::WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPAR
         {
             if (pThis->m_pd3dDevice != nullptr && wParam != SIZE_MINIMIZED)
             {
-                pThis->WaitForLastSubmittedFrame();
-                pThis->CleanupRenderTarget();
+                pThis->waitForLastSubmittedFrame();
+                pThis->cleanupRenderTarget();
                 HRESULT result = pThis->m_pSwapChain->ResizeBuffers(0, (UINT)LOWORD(lParam), (UINT)HIWORD(lParam), DXGI_FORMAT_UNKNOWN, DXGI_SWAP_CHAIN_FLAG_FRAME_LATENCY_WAITABLE_OBJECT);
                 assert(SUCCEEDED(result) && "Failed to resize swapchain.");
-                pThis->CreateRenderTarget();
+                pThis->createRenderTarget();
             }
             return 0;
         }
@@ -411,7 +411,7 @@ LRESULT CALLBACK WINAPI Window::WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPAR
 
 Window::~Window()
 {
-    CleanupDeviceD3D();
+    cleanupDeviceD3D();
     if (m_hwnd != nullptr)
     {
         DestroyWindow(m_hwnd);

@@ -37,23 +37,23 @@ private:
 public:
 	Window();
 
-	bool Init();
-	void Render();
-	inline bool IsOpen() const { return m_IsOpen; }
-	void WaitForLastSubmittedFrame();
+	bool init();
+	void render();
+	inline bool isOpen() const { return m_IsOpen; }
+	void waitForLastSubmittedFrame();
 
 	~Window();
 
 private:
-	bool InitWindow();
-	bool InitD3D();
-	bool InitImGui();
-	bool CreateDeviceD3D(HWND hWnd);
-	void CreateRenderTarget();
-	FrameContext* WaitForNextFrameResources();
-	void CleanupDeviceD3D();
-	void CleanupRenderTarget();
-	void HandleWindowMessages();
+	bool initWindow();
+	bool initD3D();
+	bool initImGui();
+	bool createDeviceD3D(HWND hWnd);
+	void createRenderTarget();
+	FrameContext* waitForNextFrameResources();
+	void cleanupDeviceD3D();
+	void cleanupRenderTarget();
+	void handleWindowMessages();
 	static LRESULT CALLBACK WINAPI WndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam);
 };
 

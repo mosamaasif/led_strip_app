@@ -9,19 +9,46 @@
 
 App::App() : m_LedController(), m_Window() {}
 
-bool App::Init()
+bool App::init()
 {
-	if (!m_Window.Init())
+	if (!m_Window.init())
 	{
 		return false;
 	}
-    LoadSettings();
+    loadSettings();
 	return true;
 }
 
-void App::LoadSettings()
+void App::run()
 {
-    std::wstring path = FetchSettingsPath();
+    while (m_Window.isOpen())
+    {
+        m_LedController.tryJoinScanningThread();
+        renderUI();
+        m_Window.render();
+    }
+
+    m_Window.waitForLastSubmittedFrame();
+}
+
+std::wstring App::fetchSettingsPath()
+{
+    PWSTR path;
+    HRESULT result = SHGetKnownFolderPath(FOLDERID_Documents, KF_FLAG_DEFAULT, NULL, &path);
+
+    if (result != S_OK)
+    {
+        return std::wstring();
+    }
+
+    std::wstring strpath = std::wstring(path) + L"\\LedStripApp";
+    CoTaskMemFree(path);
+    return strpath;
+}
+
+void App::loadSettings()
+{
+    std::wstring path = fetchSettingsPath();
     if (std::empty(path))
     {
         return;
@@ -30,7 +57,7 @@ void App::LoadSettings()
     std::ifstream file(path + L"\\settings.txt");
     if (!file.is_open())
     {
-        SaveSettings();
+        saveSettings();
         return;
     }
 
@@ -44,7 +71,7 @@ void App::LoadSettings()
         }
         else if (line.find("on") != std::string::npos)
         {
-            m_LedController.SetDeviceOnFlag(std::stoi(value));
+            m_LedController.setDeviceOnFlag(std::stoi(value));
         }
         else if (line.find("color") != std::string::npos) 
         {
@@ -64,9 +91,9 @@ void App::LoadSettings()
     file.close();
 }
 
-void App::SaveSettings()
+void App::saveSettings()
 {
-    std::wstring path = FetchSettingsPath();
+    std::wstring path = fetchSettingsPath();
     if (std::empty(path))
     {
         return;
@@ -83,29 +110,14 @@ void App::SaveSettings()
         return;
     }
     file << "name=" << m_LedController.name << "\n";
-    file << "on=" << m_LedController.IsDeviceOn() << "\n";
+    file << "on=" << m_LedController.isDeviceOn() << "\n";
     file << "color=" << m_LedController.color[0] << " " << m_LedController.color[1] << " " << m_LedController.color[2] << "\n";
     file << "brightness=" << m_LedController.brightness << "\n";
 
     file.close();
 }
 
-std::wstring App::FetchSettingsPath()
-{
-    PWSTR path;
-    HRESULT result = SHGetKnownFolderPath(FOLDERID_Documents, KF_FLAG_DEFAULT, NULL, &path);
-
-    if (result != S_OK)
-    {
-        return std::wstring();
-    }
-
-    std::wstring strpath = std::wstring(path) + L"\\LedStripApp";
-    CoTaskMemFree(path);
-    return strpath;
-}
-
-void App::RenderUI()
+void App::renderUI()
 {
     // Start the Dear ImGui frame
     ImGui_ImplDX12_NewFrame();
@@ -118,29 +130,29 @@ void App::RenderUI()
     ImGui::Begin("App Window", NULL, ImGuiWindowFlags_NoDecoration | ImGuiWindowFlags_NoResize);
 
     // drawing the ui elements on the windows
-    ImGui::Text(m_LedController.ConnectionStatusStr());
-    if (!m_LedController.IsScanning()) {
-        if (!m_LedController.IsConnected())
+    ImGui::Text(m_LedController.connectionStatusStr().c_str());
+    if (!m_LedController.isScanning()) {
+        if (!m_LedController.isConnected())
         {
             if (ImGui::InputText("Device Name", m_LedController.name, IM_ARRAYSIZE(m_LedController.name)));
             if (ImGui::Button("Connect"))
             {
-                m_LedController.ScanAndConnect();
+                m_LedController.scanAndConnect();
             }
         }
         else
         {
-            if (ImGui::Button(m_LedController.IsDeviceOn() ? "Off" : "On"))
+            if (ImGui::Button(m_LedController.isDeviceOn() ? "Off" : "On"))
             {
-                m_LedController.ToggleDevice();
+                m_LedController.toggleDevice();
             }
             if (ImGui::ColorEdit3("Color", m_LedController.color))
             {
-                m_LedController.UpdateColor();
+                m_LedController.updateColor();
             }
             if (ImGui::SliderFloat("Brightness", &m_LedController.brightness, 0, 1))
             {
-                m_LedController.UpdateBrightness();
+                m_LedController.updateBrightness();
             }
         }
     }
@@ -152,20 +164,8 @@ void App::RenderUI()
     ImGui::Render();
 }
 
-void App::Run()
-{
-    while (m_Window.IsOpen())
-    {
-        m_LedController.TryJoinScanningThread();
-        RenderUI();
-        m_Window.Render();
-    }
-
-    m_Window.WaitForLastSubmittedFrame();
-}
-
 App::~App() {
-    SaveSettings();
+    saveSettings();
     ImGui_ImplDX12_Shutdown();
     ImGui_ImplWin32_Shutdown();
     ImGui::DestroyContext();

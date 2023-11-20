@@ -12,14 +12,14 @@ private:
 public:
 	App();
 
-	bool Init();
-	void Run();
+	bool init();
+	void run();
 
 	~App();
 
 private:
-	std::wstring FetchSettingsPath();
-	void LoadSettings();
-	void SaveSettings();
-	void RenderUI();
+	std::wstring fetchSettingsPath();
+	void loadSettings();
+	void saveSettings();
+	void renderUI();
 };
