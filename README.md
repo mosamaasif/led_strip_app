@@ -13,6 +13,7 @@ Purchased an LED Strip from Ali Express that had an app to control it called "Ha
 Built with:
 - Imgui for UI
 - Uses Win32 and Dx3d for window and graphics respectively
+- Simpleble for bluetooth
 
 There is an exe avail if you just want to use the app, however feel free to build the project yourself:
 - Download Visual Studio, setup as per c++ development
